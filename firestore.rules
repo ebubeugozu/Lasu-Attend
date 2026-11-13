@@ -1,0 +1,517 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net: Default-Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Hardened Global Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(uid) {
+      return isVerifiedUser() && request.auth.uid == uid;
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'ebubeugozu79@gmail.com';
+    }
+
+    function hasUserDoc() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isSystemAdmin() {
+      return isBootstrappedAdmin() ||
+        (isVerifiedUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid))) ||
+        (isVerifiedUser() && hasUserDoc() && userDoc().role == 'system_admin' && userDoc().status == 'active');
+    }
+
+    function isDeptAdminFor(departmentId) {
+      return isVerifiedUser() && hasUserDoc() &&
+        userDoc().role == 'department_admin' &&
+        userDoc().status == 'active' &&
+        userDoc().departmentId == departmentId;
+    }
+
+    function isLecturer() {
+      return isVerifiedUser() && hasUserDoc() &&
+        userDoc().role == 'lecturer' &&
+        userDoc().status == 'active';
+    }
+
+    function isStudent() {
+      return isVerifiedUser() && hasUserDoc() && userDoc().role == 'student';
+    }
+
+    function isCourseLecturer(courseId) {
+      return isLecturer() &&
+        exists(/databases/$(database)/documents/courses/$(courseId)) &&
+        get(/databases/$(database)/documents/courses/$(courseId)).data.lecturerUid == request.auth.uid;
+    }
+
+    // 3. Entity Validation Blueprints (Anti-Update-Gap)
+
+    function isValidInstitution(data) {
+      return data.keys().hasAll(['id', 'name', 'code', 'status', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'name', 'code', 'status', 'createdAt']) &&
+        isValidId(data.id) &&
+        data.name is string && data.name.size() >= 2 && data.name.size() <= 160 &&
+        data.code is string && data.code.size() >= 2 && data.code.size() <= 24 &&
+        data.status in ['active', 'inactive'] &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidInstitutionSetting(data) {
+      return data.keys().hasAll(['id', 'lateCountPolicy', 'attendanceThreshold', 'milestonePercentages', 'updatedAt']) &&
+        data.keys().hasOnly(['id', 'lateCountPolicy', 'attendanceThreshold', 'milestonePercentages', 'updatedAt', 'updatedByUid']) &&
+        isValidId(data.id) &&
+        data.lateCountPolicy in ['count_as_attended', 'count_as_half', 'count_as_absent'] &&
+        data.attendanceThreshold is int && data.attendanceThreshold >= 10 && data.attendanceThreshold <= 100 &&
+        data.milestonePercentages is list && data.milestonePercentages.size() >= 1 && data.milestonePercentages.size() <= 10 &&
+        data.milestonePercentages[0] is int &&
+        data.updatedAt is timestamp &&
+        (!('updatedByUid' in data) || (data.updatedByUid is string && data.updatedByUid.size() <= 128));
+    }
+
+    function isValidDepartment(data) {
+      return data.keys().hasAll(['id', 'institutionId', 'facultyName', 'name', 'code', 'status', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'institutionId', 'facultyName', 'name', 'code', 'status', 'createdAt']) &&
+        isValidId(data.id) &&
+        isValidId(data.institutionId) &&
+        data.facultyName is string && data.facultyName.size() >= 2 && data.facultyName.size() <= 160 &&
+        data.name is string && data.name.size() >= 2 && data.name.size() <= 160 &&
+        data.code is string && data.code.size() >= 2 && data.code.size() <= 24 &&
+        data.status in ['active', 'inactive'] &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'role', 'departmentId', 'status', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'displayName', 'role', 'departmentId', 'facultyName', 'status', 'studentId', 'createdAt', 'updatedAt']) &&
+        isValidId(data.uid) &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 160 &&
+        data.displayName is string && data.displayName.size() >= 2 && data.displayName.size() <= 120 &&
+        data.role in ['system_admin', 'department_admin', 'lecturer', 'student'] &&
+        data.departmentId is string && data.departmentId.size() >= 1 && data.departmentId.size() <= 64 &&
+        (!('facultyName' in data) || (data.facultyName is string && data.facultyName.size() <= 160)) &&
+        data.status in ['active', 'pending', 'suspended'] &&
+        (!('studentId' in data) || (data.studentId is string && data.studentId.size() <= 64)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidStudent(data) {
+      return data.keys().hasAll(['id', 'matricNumber', 'fullName', 'departmentId', 'departmentName', 'facultyName', 'level', 'accountStatus', 'isDemo', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['id', 'matricNumber', 'fullName', 'email', 'departmentId', 'departmentName', 'facultyName', 'level', 'accountStatus', 'claimedUid', 'isDemo', 'createdAt', 'updatedAt']) &&
+        isValidId(data.id) &&
+        data.matricNumber is string && data.matricNumber.size() >= 5 && data.matricNumber.size() <= 32 &&
+        data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 140 &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 160)) &&
+        data.departmentId is string && data.departmentId.size() >= 2 && data.departmentId.size() <= 64 &&
+        data.departmentName is string && data.departmentName.size() >= 2 && data.departmentName.size() <= 160 &&
+        data.facultyName is string && data.facultyName.size() >= 2 && data.facultyName.size() <= 160 &&
+        data.level in ['100L', '200L', '300L', '400L', '500L'] &&
+        data.accountStatus in ['pending_activation', 'active', 'suspended'] &&
+        (!('claimedUid' in data) || (data.claimedUid is string && data.claimedUid.size() <= 128)) &&
+        data.isDemo is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidCourse(data) {
+      return data.keys().hasAll(['id', 'institutionId', 'departmentId', 'departmentName', 'courseCode', 'courseTitle', 'level', 'semester', 'lecturerUid', 'lecturerName', 'status', 'enrolledCount', 'isDemo', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['id', 'institutionId', 'departmentId', 'departmentName', 'courseCode', 'courseTitle', 'level', 'semester', 'lecturerUid', 'lecturerName', 'status', 'enrolledCount', 'timetableSlots', 'isDemo', 'createdAt', 'updatedAt']) &&
+        isValidId(data.id) &&
+        isValidId(data.institutionId) &&
+        isValidId(data.departmentId) &&
+        data.departmentName is string && data.departmentName.size() >= 2 && data.departmentName.size() <= 160 &&
+        data.courseCode is string && data.courseCode.size() >= 3 && data.courseCode.size() <= 24 &&
+        data.courseTitle is string && data.courseTitle.size() >= 3 && data.courseTitle.size() <= 180 &&
+        data.level in ['100L', '200L', '300L', '400L', '500L'] &&
+        data.semester is string && data.semester.size() >= 2 && data.semester.size() <= 64 &&
+        isValidId(data.lecturerUid) &&
+        data.lecturerName is string && data.lecturerName.size() >= 2 && data.lecturerName.size() <= 120 &&
+        data.status in ['active', 'archived'] &&
+        data.enrolledCount is int && data.enrolledCount >= 0 && data.enrolledCount <= 50000 &&
+        (!('timetableSlots' in data) || (data.timetableSlots is list && data.timetableSlots.size() <= 10 && (data.timetableSlots.size() == 0 || data.timetableSlots[0] is map))) &&
+        data.isDemo is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidEnrolment(data) {
+      return data.keys().hasAll(['id', 'courseId', 'studentId', 'matricNumber', 'lecturerUid', 'status', 'enrolledAt']) &&
+        data.keys().hasOnly(['id', 'courseId', 'studentId', 'matricNumber', 'studentUid', 'lecturerUid', 'status', 'enrolledAt']) &&
+        isValidId(data.id) &&
+        isValidId(data.courseId) &&
+        isValidId(data.studentId) &&
+        data.matricNumber is string && data.matricNumber.size() >= 5 && data.matricNumber.size() <= 32 &&
+        (!('studentUid' in data) || (data.studentUid is string && data.studentUid.size() <= 128)) &&
+        isValidId(data.lecturerUid) &&
+        data.status in ['enrolled', 'dropped'] &&
+        data.enrolledAt is timestamp;
+    }
+
+    function isValidAttendanceSession(data) {
+      return data.keys().hasAll(['id', 'courseId', 'courseCode', 'courseTitle', 'departmentId', 'lecturerUid', 'lecturerName', 'sessionDate', 'startTime', 'lateThresholdMinutes', 'status', 'checkpointActive', 'totalEnrolled', 'presentCount', 'lateCount', 'absentCount', 'verifiedCount', 'isDemo', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['id', 'courseId', 'courseCode', 'courseTitle', 'departmentId', 'lecturerUid', 'lecturerName', 'lectureTitle', 'venue', 'sessionDate', 'startTime', 'lateThresholdMinutes', 'status', 'checkpointActive', 'totalEnrolled', 'presentCount', 'lateCount', 'absentCount', 'verifiedCount', 'isDemo', 'createdAt', 'updatedAt']) &&
+        isValidId(data.id) &&
+        isValidId(data.courseId) &&
+        data.courseCode is string && data.courseCode.size() >= 2 && data.courseCode.size() <= 24 &&
+        data.courseTitle is string && data.courseTitle.size() >= 2 && data.courseTitle.size() <= 180 &&
+        isValidId(data.departmentId) &&
+        isValidId(data.lecturerUid) &&
+        data.lecturerName is string && data.lecturerName.size() >= 2 && data.lecturerName.size() <= 120 &&
+        (!('lectureTitle' in data) || (data.lectureTitle is string && data.lectureTitle.size() <= 180)) &&
+        (!('venue' in data) || (data.venue is string && data.venue.size() <= 120)) &&
+        data.sessionDate is string && data.sessionDate.size() >= 8 && data.sessionDate.size() <= 24 &&
+        data.startTime is string && data.startTime.size() >= 4 && data.startTime.size() <= 24 &&
+        data.lateThresholdMinutes is int && data.lateThresholdMinutes >= 0 && data.lateThresholdMinutes <= 180 &&
+        data.status in ['scheduled', 'live', 'completed', 'cancelled'] &&
+        data.checkpointActive is bool &&
+        data.totalEnrolled is int && data.totalEnrolled >= 0 && data.totalEnrolled <= 50000 &&
+        data.presentCount is int && data.presentCount >= 0 && data.presentCount <= 50000 &&
+        data.lateCount is int && data.lateCount >= 0 && data.lateCount <= 50000 &&
+        data.absentCount is int && data.absentCount >= 0 && data.absentCount <= 50000 &&
+        data.verifiedCount is int && data.verifiedCount >= 0 && data.verifiedCount <= 50000 &&
+        data.isDemo is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidAttendanceRecord(data) {
+      return data.keys().hasAll(['id', 'sessionId', 'courseId', 'lecturerUid', 'studentId', 'matricNumber', 'studentName', 'status', 'checkpointStatus', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['id', 'sessionId', 'courseId', 'lecturerUid', 'studentId', 'studentUid', 'matricNumber', 'studentName', 'status', 'checkInTime', 'checkpointStatus', 'checkpointTime', 'correctedByUid', 'correctionReason', 'createdAt', 'updatedAt']) &&
+        isValidId(data.id) &&
+        isValidId(data.sessionId) &&
+        isValidId(data.courseId) &&
+        isValidId(data.lecturerUid) &&
+        isValidId(data.studentId) &&
+        (!('studentUid' in data) || (data.studentUid is string && data.studentUid.size() <= 128)) &&
+        data.matricNumber is string && data.matricNumber.size() >= 5 && data.matricNumber.size() <= 32 &&
+        data.studentName is string && data.studentName.size() >= 2 && data.studentName.size() <= 140 &&
+        data.status in ['present', 'late', 'absent', 'excused'] &&
+        (!('checkInTime' in data) || (data.checkInTime is string && data.checkInTime.size() <= 40)) &&
+        data.checkpointStatus in ['none', 'completed', 'missed'] &&
+        (!('checkpointTime' in data) || (data.checkpointTime is string && data.checkpointTime.size() <= 40)) &&
+        (!('correctedByUid' in data) || (data.correctedByUid is string && data.correctedByUid.size() <= 128)) &&
+        (!('correctionReason' in data) || (data.correctionReason is string && data.correctionReason.size() <= 300)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidCheckpointEvent(data) {
+      return data.keys().hasAll(['id', 'sessionId', 'courseId', 'lecturerUid', 'studentId', 'matricNumber', 'verifiedAt']) &&
+        data.keys().hasOnly(['id', 'sessionId', 'courseId', 'lecturerUid', 'studentId', 'studentUid', 'matricNumber', 'verifiedAt']) &&
+        isValidId(data.id) &&
+        isValidId(data.sessionId) &&
+        isValidId(data.courseId) &&
+        isValidId(data.lecturerUid) &&
+        isValidId(data.studentId) &&
+        (!('studentUid' in data) || (data.studentUid is string && data.studentUid.size() <= 128)) &&
+        data.matricNumber is string && data.matricNumber.size() >= 5 && data.matricNumber.size() <= 32 &&
+        data.verifiedAt is timestamp;
+    }
+
+    function isValidAuditLog(data) {
+      return data.keys().hasAll(['id', 'actorUid', 'actorName', 'actorRole', 'action', 'targetType', 'targetId', 'details', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'actorUid', 'actorName', 'actorRole', 'action', 'targetType', 'targetId', 'details', 'departmentId', 'createdAt']) &&
+        isValidId(data.id) &&
+        isValidId(data.actorUid) &&
+        data.actorName is string && data.actorName.size() >= 2 && data.actorName.size() <= 120 &&
+        data.actorRole in ['system_admin', 'department_admin', 'lecturer', 'student', 'system'] &&
+        data.action is string && data.action.size() >= 2 && data.action.size() <= 80 &&
+        data.targetType is string && data.targetType.size() >= 2 && data.targetType.size() <= 64 &&
+        data.targetId is string && data.targetId.size() >= 2 && data.targetId.size() <= 128 &&
+        data.details is string && data.details.size() <= 500 &&
+        (!('departmentId' in data) || (data.departmentId is string && data.departmentId.size() <= 64)) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll(['id', 'recipientUid', 'title', 'message', 'type', 'read', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'recipientUid', 'title', 'message', 'type', 'category', 'milestoneKey', 'courseId', 'read', 'createdAt']) &&
+        isValidId(data.id) &&
+        isValidId(data.recipientUid) &&
+        data.title is string && data.title.size() >= 2 && data.title.size() <= 140 &&
+        data.message is string && data.message.size() >= 2 && data.message.size() <= 400 &&
+        data.type in ['info', 'warning', 'success'] &&
+        (!('category' in data) || data.category in ['upcoming_class', 'milestone', 'attendance_update', 'info']) &&
+        (!('milestoneKey' in data) || (data.milestoneKey is string && data.milestoneKey.size() <= 160)) &&
+        (!('courseId' in data) || (data.courseId is string && data.courseId.size() <= 64)) &&
+        data.read is bool &&
+        data.createdAt is timestamp;
+    }
+
+    // 4. Collection Rules
+
+    match /admins/{adminUid} {
+      allow get: if isVerifiedUser() && isValidId(adminUid) && (isOwner(adminUid) || isSystemAdmin());
+      allow list: if false;
+      allow create, update, delete: if isBootstrappedAdmin() && isValidId(adminUid);
+    }
+
+    match /institutions/{institutionId} {
+      allow get: if isVerifiedUser() && isValidId(institutionId);
+      allow list: if isVerifiedUser() && resource.data.status == 'active';
+      allow create: if isSystemAdmin() && isValidId(institutionId) && isValidInstitution(incoming()) && incoming().createdAt == request.time;
+      allow update: if isSystemAdmin() && isValidId(institutionId) && isValidInstitution(incoming()) && incoming().createdAt == existing().createdAt;
+      allow delete: if false;
+    }
+
+    match /institutionSettings/{settingId} {
+      allow get: if isVerifiedUser() && isValidId(settingId);
+      allow list: if isVerifiedUser() && resource.data.attendanceThreshold is int;
+      allow create, update: if isSystemAdmin() && isValidId(settingId) && isValidInstitutionSetting(incoming()) && incoming().updatedAt == request.time;
+      allow delete: if false;
+    }
+
+    match /departments/{departmentId} {
+      allow get: if isVerifiedUser() && isValidId(departmentId);
+      allow list: if isVerifiedUser() && resource.data.status == 'active';
+      allow create: if isSystemAdmin() && isValidId(departmentId) && isValidDepartment(incoming()) && incoming().createdAt == request.time;
+      allow update: if isSystemAdmin() && isValidId(departmentId) && isValidDepartment(incoming()) && incoming().createdAt == existing().createdAt;
+      allow delete: if false;
+    }
+
+    match /users/{userId} {
+      allow get: if isVerifiedUser() && isValidId(userId) && (isOwner(userId) || isSystemAdmin());
+      allow list: if isVerifiedUser() && (resource.data.uid == request.auth.uid || isBootstrappedAdmin());
+      allow create: if isVerifiedUser() && isValidId(userId) && isValidUser(incoming()) &&
+        incoming().uid == userId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (
+          isSystemAdmin() ||
+          (isOwner(userId) && incoming().role == 'student' && incoming().status == 'pending')
+        );
+      allow update: if isVerifiedUser() && isValidId(userId) && isValidUser(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          isSystemAdmin() ||
+          (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'updatedAt']))
+        );
+      allow delete: if false;
+    }
+
+    match /students/{studentId} {
+      allow get: if isVerifiedUser() && isValidId(studentId) && (
+        isSystemAdmin() ||
+        isDeptAdminFor(existing().departmentId) ||
+        isLecturer() ||
+        existing().claimedUid == request.auth.uid
+      );
+      allow list: if isVerifiedUser() && (resource.data.claimedUid == request.auth.uid || isBootstrappedAdmin());
+      allow create: if isVerifiedUser() && isValidId(studentId) && isValidStudent(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (isSystemAdmin() || isDeptAdminFor(incoming().departmentId));
+      allow update: if isVerifiedUser() && isValidId(studentId) && isValidStudent(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (isSystemAdmin() || isDeptAdminFor(existing().departmentId));
+      allow delete: if false;
+    }
+
+    match /courses/{courseId} {
+      allow get: if isVerifiedUser() && isValidId(courseId) && (
+        isSystemAdmin() ||
+        isDeptAdminFor(existing().departmentId) ||
+        existing().lecturerUid == request.auth.uid ||
+        isStudent()
+      );
+      allow list: if isVerifiedUser() && (
+        resource.data.lecturerUid == request.auth.uid ||
+        resource.data.status == 'active' ||
+        isBootstrappedAdmin()
+      );
+      allow create: if isVerifiedUser() && isValidId(courseId) && isValidCourse(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (isSystemAdmin() || isDeptAdminFor(incoming().departmentId) || (isLecturer() && incoming().lecturerUid == request.auth.uid));
+      allow update: if isVerifiedUser() && isValidId(courseId) && isValidCourse(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          isSystemAdmin() ||
+          isDeptAdminFor(existing().departmentId) ||
+          (existing().lecturerUid == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['courseTitle', 'semester', 'status', 'enrolledCount', 'timetableSlots', 'updatedAt']))
+        );
+      allow delete: if false;
+    }
+
+    match /enrolments/{enrolmentId} {
+      allow get: if isVerifiedUser() && isValidId(enrolmentId) && (
+        isSystemAdmin() ||
+        isCourseLecturer(existing().courseId) ||
+        existing().studentUid == request.auth.uid
+      );
+      allow list: if isVerifiedUser() && (
+        resource.data.studentUid == request.auth.uid ||
+        resource.data.lecturerUid == request.auth.uid ||
+        isBootstrappedAdmin()
+      );
+      allow create: if isVerifiedUser() && isValidId(enrolmentId) && isValidEnrolment(incoming()) &&
+        incoming().enrolledAt == request.time &&
+        exists(/databases/$(database)/documents/courses/$(incoming().courseId)) &&
+        exists(/databases/$(database)/documents/students/$(incoming().studentId)) &&
+        (isSystemAdmin() || isCourseLecturer(incoming().courseId));
+      allow update: if isVerifiedUser() && isValidId(enrolmentId) && isValidEnrolment(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().courseId == existing().courseId &&
+        incoming().studentId == existing().studentId &&
+        incoming().enrolledAt == existing().enrolledAt &&
+        (isSystemAdmin() || (isCourseLecturer(existing().courseId) && incoming().diff(existing()).affectedKeys().hasOnly(['status'])));
+      allow delete: if false;
+    }
+
+    match /attendanceSessions/{sessionId} {
+      allow get: if isVerifiedUser() && isValidId(sessionId);
+      allow list: if isVerifiedUser() && (
+        resource.data.lecturerUid == request.auth.uid ||
+        resource.data.status == 'live' ||
+        isBootstrappedAdmin()
+      );
+      allow create: if isVerifiedUser() && isValidId(sessionId) && isValidAttendanceSession(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/courses/$(incoming().courseId)) &&
+        (isSystemAdmin() || isDeptAdminFor(incoming().departmentId) || (isLecturer() && incoming().lecturerUid == request.auth.uid));
+      allow update: if isVerifiedUser() && isValidId(sessionId) && isValidAttendanceSession(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().courseId == existing().courseId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          isSystemAdmin() ||
+          (
+            existing().status in ['scheduled', 'live'] &&
+            (isDeptAdminFor(existing().departmentId) || existing().lecturerUid == request.auth.uid) &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'checkpointActive', 'lectureTitle', 'venue', 'lateThresholdMinutes', 'presentCount', 'lateCount', 'absentCount', 'verifiedCount', 'updatedAt'])
+          )
+        );
+      allow delete: if false;
+    }
+
+    match /attendanceRecords/{recordId} {
+      // CRITICAL: Students CANNOT create, update, or delete attendance records directly.
+      allow get: if isVerifiedUser() && isValidId(recordId) && (
+        existing().studentUid == request.auth.uid ||
+        isSystemAdmin() ||
+        isCourseLecturer(existing().courseId)
+      );
+      allow list: if isVerifiedUser() && (
+        resource.data.studentUid == request.auth.uid ||
+        resource.data.lecturerUid == request.auth.uid ||
+        isBootstrappedAdmin()
+      );
+      allow create: if isVerifiedUser() && isValidId(recordId) && isValidAttendanceRecord(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/attendanceSessions/$(incoming().sessionId)) &&
+        (isSystemAdmin() || isCourseLecturer(incoming().courseId));
+      allow update: if isVerifiedUser() && isValidId(recordId) && isValidAttendanceRecord(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().sessionId == existing().sessionId &&
+        incoming().courseId == existing().courseId &&
+        incoming().studentId == existing().studentId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          isSystemAdmin() ||
+          (isCourseLecturer(existing().courseId) && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'checkpointStatus', 'checkpointTime', 'correctedByUid', 'correctionReason', 'updatedAt']))
+        );
+      allow delete: if false;
+    }
+
+    match /checkpointEvents/{eventId} {
+      // Students cannot write directly to checkpointEvents.
+      allow get: if isVerifiedUser() && isValidId(eventId) && (
+        existing().studentUid == request.auth.uid ||
+        isSystemAdmin() ||
+        isCourseLecturer(existing().courseId)
+      );
+      allow list: if isVerifiedUser() && (
+        resource.data.studentUid == request.auth.uid ||
+        resource.data.lecturerUid == request.auth.uid ||
+        isBootstrappedAdmin()
+      );
+      allow create: if isVerifiedUser() && isValidId(eventId) && isValidCheckpointEvent(incoming()) &&
+        incoming().verifiedAt == request.time &&
+        exists(/databases/$(database)/documents/attendanceSessions/$(incoming().sessionId)) &&
+        (isSystemAdmin() || isCourseLecturer(incoming().courseId));
+      allow update, delete: if false;
+    }
+
+    match /qrTokenSecrets/{sessionId} {
+      // Strictly server-only via Firebase Admin SDK; zero client access.
+      allow read, write: if false;
+    }
+
+    match /auditLogs/{logId} {
+      allow get: if isVerifiedUser() && isValidId(logId) && (
+        isSystemAdmin() ||
+        existing().actorUid == request.auth.uid
+      );
+      allow list: if isVerifiedUser() && (
+        resource.data.actorUid == request.auth.uid ||
+        isBootstrappedAdmin()
+      );
+      allow create: if isVerifiedUser() && isValidId(logId) && isValidAuditLog(incoming()) &&
+        incoming().actorUid == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        !isStudent();
+      allow update, delete: if false;
+    }
+
+    match /notifications/{notificationId} {
+      allow get: if isVerifiedUser() && isValidId(notificationId) && (
+        existing().recipientUid == request.auth.uid ||
+        isSystemAdmin()
+      );
+      allow list: if isVerifiedUser() && (
+        resource.data.recipientUid == request.auth.uid ||
+        isBootstrappedAdmin()
+      );
+      allow create: if isVerifiedUser() && isValidId(notificationId) && isValidNotification(incoming()) &&
+        incoming().createdAt == request.time &&
+        (isSystemAdmin() || isLecturer());
+      allow update: if isVerifiedUser() && isValidId(notificationId) && isValidNotification(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().recipientUid == existing().recipientUid &&
+        incoming().createdAt == existing().createdAt &&
+        existing().recipientUid == request.auth.uid &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+      allow delete: if isVerifiedUser() && isValidId(notificationId) && existing().recipientUid == request.auth.uid;
+    }
+  }
+}

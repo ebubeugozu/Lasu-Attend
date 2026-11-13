@@ -1,0 +1,295 @@
+{
+  "entities": {
+    "Institution": {
+      "title": "Institution",
+      "description": "Top-level university or institution record supporting future multi-institution expansion.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "code": { "type": "string", "minLength": 2, "maxLength": 24 },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "code", "status", "createdAt"]
+    },
+    "InstitutionSetting": {
+      "title": "InstitutionSetting",
+      "description": "Configurable institutional attendance policies including late attendance calculation and milestone thresholds.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "lateCountPolicy": { "type": "string", "enum": ["count_as_attended", "count_as_half", "count_as_absent"] },
+        "attendanceThreshold": { "type": "integer" },
+        "milestonePercentages": { "type": "array" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "updatedByUid": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["id", "lateCountPolicy", "attendanceThreshold", "milestonePercentages", "updatedAt"]
+    },
+    "Department": {
+      "title": "Department",
+      "description": "Academic department within a faculty.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "institutionId": { "type": "string", "minLength": 2, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "facultyName": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "name": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "code": { "type": "string", "minLength": 2, "maxLength": 24 },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "institutionId", "facultyName", "name", "code", "status", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Authenticated platform user profile with RBAC role assignment.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "minLength": 3, "maxLength": 160 },
+        "displayName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "role": { "type": "string", "enum": ["system_admin", "department_admin", "lecturer", "student"] },
+        "departmentId": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "facultyName": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "status": { "type": "string", "enum": ["active", "pending", "suspended"] },
+        "studentId": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "displayName", "role", "departmentId", "status", "createdAt", "updatedAt"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Official student register record separate from course enrolments and attendance records.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "matricNumber": { "type": "string", "minLength": 5, "maxLength": 32, "pattern": "^[a-zA-Z0-9_\\-/]+$" },
+        "fullName": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "email": { "type": "string", "maxLength": 160 },
+        "departmentId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "departmentName": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "facultyName": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "level": { "type": "string", "enum": ["100L", "200L", "300L", "400L", "500L"] },
+        "accountStatus": { "type": "string", "enum": ["pending_activation", "active", "suspended"] },
+        "claimedUid": { "type": "string", "maxLength": 128 },
+        "isDemo": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "matricNumber", "fullName", "departmentId", "departmentName", "facultyName", "level", "accountStatus", "isDemo", "createdAt", "updatedAt"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Academic course managed by an assigned lecturer, including optional timetable slots.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "institutionId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "departmentId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "departmentName": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "courseCode": { "type": "string", "minLength": 3, "maxLength": 24 },
+        "courseTitle": { "type": "string", "minLength": 3, "maxLength": 180 },
+        "level": { "type": "string", "enum": ["100L", "200L", "300L", "400L", "500L"] },
+        "semester": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "lecturerUid": { "type": "string", "minLength": 2, "maxLength": 128 },
+        "lecturerName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "status": { "type": "string", "enum": ["active", "archived"] },
+        "enrolledCount": { "type": "integer" },
+        "timetableSlots": { "type": "array" },
+        "isDemo": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "institutionId", "departmentId", "departmentName", "courseCode", "courseTitle", "level", "semester", "lecturerUid", "lecturerName", "status", "enrolledCount", "isDemo", "createdAt", "updatedAt"]
+    },
+    "Enrolment": {
+      "title": "Enrolment",
+      "description": "Course enrolment link between a Student and a Course.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "courseId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "studentId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "matricNumber": { "type": "string", "minLength": 5, "maxLength": 32 },
+        "studentUid": { "type": "string", "maxLength": 128 },
+        "lecturerUid": { "type": "string", "minLength": 2, "maxLength": 128 },
+        "status": { "type": "string", "enum": ["enrolled", "dropped"] },
+        "enrolledAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "courseId", "studentId", "matricNumber", "lecturerUid", "status", "enrolledAt"]
+    },
+    "AttendanceSession": {
+      "title": "AttendanceSession",
+      "description": "Lecture attendance session metadata and aggregated totals.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "courseId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "courseCode": { "type": "string", "minLength": 2, "maxLength": 24 },
+        "courseTitle": { "type": "string", "minLength": 2, "maxLength": 180 },
+        "departmentId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "lecturerUid": { "type": "string", "minLength": 2, "maxLength": 128 },
+        "lecturerName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "lectureTitle": { "type": "string", "maxLength": 180 },
+        "venue": { "type": "string", "maxLength": 120 },
+        "sessionDate": { "type": "string", "minLength": 8, "maxLength": 24 },
+        "startTime": { "type": "string", "minLength": 4, "maxLength": 24 },
+        "lateThresholdMinutes": { "type": "integer" },
+        "status": { "type": "string", "enum": ["scheduled", "live", "completed", "cancelled"] },
+        "checkpointActive": { "type": "boolean" },
+        "totalEnrolled": { "type": "integer" },
+        "presentCount": { "type": "integer" },
+        "lateCount": { "type": "integer" },
+        "absentCount": { "type": "integer" },
+        "verifiedCount": { "type": "integer" },
+        "isDemo": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "courseId", "courseCode", "courseTitle", "departmentId", "lecturerUid", "lecturerName", "sessionDate", "startTime", "lateThresholdMinutes", "status", "checkpointActive", "totalEnrolled", "presentCount", "lateCount", "absentCount", "verifiedCount", "isDemo", "createdAt", "updatedAt"]
+    },
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "Authoritative per-student attendance record for a session. Never directly writable by students.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "sessionId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "courseId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "lecturerUid": { "type": "string", "minLength": 2, "maxLength": 128 },
+        "studentId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "studentUid": { "type": "string", "maxLength": 128 },
+        "matricNumber": { "type": "string", "minLength": 5, "maxLength": 32 },
+        "studentName": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "status": { "type": "string", "enum": ["present", "late", "absent", "excused"] },
+        "checkInTime": { "type": "string", "maxLength": 40 },
+        "checkpointStatus": { "type": "string", "enum": ["none", "completed", "missed"] },
+        "checkpointTime": { "type": "string", "maxLength": 40 },
+        "correctedByUid": { "type": "string", "maxLength": 128 },
+        "correctionReason": { "type": "string", "maxLength": 300 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "sessionId", "courseId", "lecturerUid", "studentId", "matricNumber", "studentName", "status", "checkpointStatus", "createdAt", "updatedAt"]
+    },
+    "CheckpointEvent": {
+      "title": "CheckpointEvent",
+      "description": "Second attendance checkpoint verification scan event.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "sessionId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "courseId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "lecturerUid": { "type": "string", "minLength": 2, "maxLength": 128 },
+        "studentId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "studentUid": { "type": "string", "maxLength": 128 },
+        "matricNumber": { "type": "string", "minLength": 5, "maxLength": 32 },
+        "verifiedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "sessionId", "courseId", "lecturerUid", "studentId", "matricNumber", "verifiedAt"]
+    },
+    "QRTokenSecret": {
+      "title": "QRTokenSecret",
+      "description": "Server-only rotating QR token state for active sessions. Never directly readable or writable by clients.",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sessionId", "updatedAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable audit trail of security and attendance operations.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "actorUid": { "type": "string", "minLength": 2, "maxLength": 128 },
+        "actorName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "actorRole": { "type": "string", "enum": ["system_admin", "department_admin", "lecturer", "student", "system"] },
+        "action": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "targetType": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "targetId": { "type": "string", "minLength": 2, "maxLength": 128 },
+        "details": { "type": "string", "maxLength": 500 },
+        "departmentId": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "actorUid", "actorName", "actorRole", "action", "targetType", "targetId", "details", "createdAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User notification for upcoming classes, attendance milestones, and attendance updates.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "recipientUid": { "type": "string", "minLength": 2, "maxLength": 128 },
+        "title": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "message": { "type": "string", "minLength": 2, "maxLength": 400 },
+        "type": { "type": "string", "enum": ["info", "warning", "success"] },
+        "category": { "type": "string", "enum": ["upcoming_class", "milestone", "attendance_update", "info"] },
+        "milestoneKey": { "type": "string", "maxLength": 160 },
+        "courseId": { "type": "string", "maxLength": 64 },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "recipientUid", "title", "message", "type", "read", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/institutions/{institutionId}": {
+      "schema": { "$ref": "#/entities/Institution" },
+      "description": "University institution records."
+    },
+    "/institutionSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/InstitutionSetting" },
+      "description": "Institutional attendance calculation policies and thresholds."
+    },
+    "/departments/{departmentId}": {
+      "schema": { "$ref": "#/entities/Department" },
+      "description": "Academic department directory."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles and RBAC role mappings."
+    },
+    "/students/{studentId}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Official student register records."
+    },
+    "/courses/{courseId}": {
+      "schema": { "$ref": "#/entities/Course" },
+      "description": "University courses and timetable slots."
+    },
+    "/enrolments/{enrolmentId}": {
+      "schema": { "$ref": "#/entities/Enrolment" },
+      "description": "Student-to-course enrolment links."
+    },
+    "/attendanceSessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/AttendanceSession" },
+      "description": "Lecture attendance sessions."
+    },
+    "/attendanceRecords/{recordId}": {
+      "schema": { "$ref": "#/entities/AttendanceRecord" },
+      "description": "Server-validated student attendance records."
+    },
+    "/checkpointEvents/{eventId}": {
+      "schema": { "$ref": "#/entities/CheckpointEvent" },
+      "description": "Second-checkpoint verification events."
+    },
+    "/qrTokenSecrets/{sessionId}": {
+      "schema": { "$ref": "#/entities/QRTokenSecret" },
+      "description": "Server-only rotating QR token state."
+    },
+    "/auditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Append-only security and attendance audit logs."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "User notifications."
+    }
+  }
+}

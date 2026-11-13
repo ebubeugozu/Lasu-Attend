@@ -1,0 +1,6 @@
+{
+  "name": "LASU Attend",
+  "description": "University attendance management SaaS platform for Lagos State University featuring dynamic rotating QR codes, live lecture hall monitoring, role-based dashboards, and institutional analytics.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LASU Attend — University Attendance Management Platform</title>
+    <meta
+      name="description"
+      content="University attendance management SaaS platform for Lagos State University featuring dynamic rotating QR codes, live lecture hall monitoring, role-based dashboards, and institutional analytics."
+    />
+    <meta property="og:title" content="LASU Attend — University Attendance Management Platform" />
+    <meta
+      property="og:description"
+      content="University attendance management SaaS platform for Lagos State University featuring dynamic rotating QR codes, live lecture hall monitoring, role-based dashboards, and institutional analytics."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      (function () {
+        try {
+          var pref = localStorage.getItem('lasu_attend_theme') || 'system';
+          var isDark =
+            pref === 'dark' ||
+            (pref === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.style.colorScheme = 'dark';
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class="bg-[#F6F8FB] dark:bg-[#09111E] text-[#172337] dark:text-slate-100 antialiased selection:bg-[#4263EB]/15 selection:text-[#14243A] dark:selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

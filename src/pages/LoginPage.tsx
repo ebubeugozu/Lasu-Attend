@@ -5,7 +5,7 @@ import { ThemeSwitcher } from '../context/ThemeContext';
 import { BrandMark } from '../components/ui/Common';
 
 export function LoginPage({ redirectNotice }: { redirectNotice?: string }) {
-  const { loginWithGoogle, loginWithEmail, sendPasswordReset, loginDemo, demoAccounts } = useAuth();
+  const { loginWithGoogle, loginWithEmail, sendPasswordReset, loginDemo, demoAccounts, systemStatus } = useAuth();
   const [mode, setMode] = useState<'sso' | 'email' | 'reset'>('sso');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -73,7 +73,7 @@ export function LoginPage({ redirectNotice }: { redirectNotice?: string }) {
   return (
     <div className="min-h-screen bg-[#F6F8FB] dark:bg-[#09111E] flex flex-col lg:flex-row">
       {/* Left Institutional Brand Column */}
-      <aside className="lg:w-[44%] bg-[#0D1828] text-white p-8 md:p-12 lg:p-16 flex flex-col justify-between">
+      <aside className="lg:w-[44%] bg-[#0D1828] text-white p-5 sm:p-8 md:p-12 lg:p-16 flex flex-col justify-between">
         <div>
           <div className="flex items-center gap-3">
             <BrandMark size={36} light />
@@ -112,7 +112,7 @@ export function LoginPage({ redirectNotice }: { redirectNotice?: string }) {
       </aside>
 
       {/* Right Sign-In Column */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6 md:p-12 relative">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 md:p-12 relative">
         <div className="w-full max-w-md flex justify-end mb-4">
           <ThemeSwitcher variant="compact" />
         </div>
@@ -124,7 +124,7 @@ export function LoginPage({ redirectNotice }: { redirectNotice?: string }) {
             </div>
           )}
 
-          <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-6 md:p-8 shadow-xs">
+          <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-5 sm:p-6 md:p-8 shadow-xs">
             <h2 className="text-2xl font-bold text-[#172337] dark:text-slate-100">Sign in to LASU Attend</h2>
             <p className="text-sm text-[#697586] dark:text-slate-400 mt-1">
               Use your verified Google account for institutional access or student activation.
@@ -291,8 +291,8 @@ export function LoginPage({ redirectNotice }: { redirectNotice?: string }) {
             )}
           </div>
 
-          {/* Development / Demo Accounts Panel */}
-          {demoAccounts.length > 0 && (
+          {/* Development / Demo Accounts Panel (Never rendered in production builds) */}
+          {!import.meta.env.PROD && systemStatus?.demoModeEnabled && demoAccounts.length > 0 && (
             <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-5">
               <div className="flex items-center justify-between gap-2 mb-3">
                 <div>

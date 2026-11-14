@@ -236,6 +236,21 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "recipientUid", "title", "message", "type", "read", "createdAt"]
+    },
+    "FailedAttempt": {
+      "title": "FailedAttempt",
+      "description": "Server-only log of rejected QR scans or check-in attempts for live session monitoring.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 128 },
+        "sessionId": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "actorUid": { "type": "string", "maxLength": 128 },
+        "matricNumber": { "type": "string", "maxLength": 32 },
+        "reason": { "type": "string", "maxLength": 300 },
+        "code": { "type": "string", "maxLength": 64 },
+        "attemptedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "sessionId", "reason", "code", "attemptedAt"]
     }
   },
   "firestore": {
@@ -282,6 +297,10 @@
     "/qrTokenSecrets/{sessionId}": {
       "schema": { "$ref": "#/entities/QRTokenSecret" },
       "description": "Server-only rotating QR token state."
+    },
+    "/failedAttempts/{attemptId}": {
+      "schema": { "$ref": "#/entities/FailedAttempt" },
+      "description": "Server-only rejected check-in attempt logs."
     },
     "/auditLogs/{logId}": {
       "schema": { "$ref": "#/entities/AuditLog" },

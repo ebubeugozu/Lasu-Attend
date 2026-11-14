@@ -124,6 +124,9 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
   const [selectedSession, setSelectedSession] = useState<AttendanceSession | null>(null);
   const [staffUsers, setStaffUsers] = useState<PlatformUser[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [auditPage, setAuditPage] = useState(1);
+  const [auditTotal, setAuditTotal] = useState(0);
+  const [auditTotalPages, setAuditTotalPages] = useState(1);
   const [auditActionFilter, setAuditActionFilter] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -217,10 +220,18 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
   }, [studentPage, studentSearch, studentStatusFilter]);
 
   const loadAudit = useCallback(async () => {
-    const q = auditActionFilter ? `?action=${encodeURIComponent(auditActionFilter)}` : '';
-    const logs = await apiFetch<AuditLog[]>(`/api/audit-logs${q}`);
-    setAuditLogs(logs);
-  }, [auditActionFilter]);
+    const q = new URLSearchParams({ page: String(auditPage), pageSize: '25' });
+    if (auditActionFilter) q.set('action', auditActionFilter);
+    const res = await apiFetch<{
+      items: AuditLog[];
+      total: number;
+      page: number;
+      totalPages: number;
+    }>(`/api/audit-logs?${q.toString()}`);
+    setAuditLogs(res.items || []);
+    setAuditTotal(res.total ?? 0);
+    setAuditTotalPages(res.totalPages ?? 1);
+  }, [auditActionFilter, auditPage]);
 
   useEffect(() => {
     if (activeNav === 'students') loadStudents();
@@ -728,8 +739,8 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+            <div className="relative w-full sm:w-64">
               <Search className="w-4 h-4 text-[#697586] dark:text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="search"
@@ -739,7 +750,7 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
                   setStudentPage(1);
                 }}
                 placeholder="Search name or matric..."
-                className="min-h-[38px] pl-9 pr-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#0F1A2B] text-[#172337] dark:text-slate-100 w-64"
+                className="min-h-[38px] pl-9 pr-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#0F1A2B] text-[#172337] dark:text-slate-100 w-full"
               />
             </div>
             <select
@@ -748,7 +759,7 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
                 setStudentStatusFilter(e.target.value);
                 setStudentPage(1);
               }}
-              className="min-h-[38px] px-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#0F1A2B] text-[#172337] dark:text-slate-100"
+              className="min-h-[38px] px-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#0F1A2B] text-[#172337] dark:text-slate-100 w-full sm:w-auto"
             >
               <option value="">All account statuses</option>
               <option value="active">Active</option>
@@ -887,7 +898,7 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
             <select
               value={selectedSession?.id || ''}
               onChange={(e) => setSelectedSession(sessions.find((s) => s.id === e.target.value) || null)}
-              className="min-h-[40px] px-3 py-2 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#0F1A2B] text-[#172337] dark:text-slate-100"
+              className="min-h-[40px] px-3 py-2 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#0F1A2B] text-[#172337] dark:text-slate-100 w-full sm:w-auto max-w-full"
             >
               {sessions.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -926,8 +937,11 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
             </div>
             <select
               value={auditActionFilter}
-              onChange={(e) => setAuditActionFilter(e.target.value)}
-              className="min-h-[40px] px-3 py-2 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#0F1A2B] text-[#172337] dark:text-slate-100"
+              onChange={(e) => {
+                setAuditActionFilter(e.target.value);
+                setAuditPage(1);
+              }}
+              className="min-h-[40px] px-3 py-2 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#0F1A2B] text-[#172337] dark:text-slate-100 w-full sm:w-auto"
             >
               <option value="">All Actions</option>
               <option value="SESSION_STARTED">Session Started</option>
@@ -970,6 +984,29 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
                 </tbody>
               </table>
             </div>
+            <div className="px-4 py-3 border-t border-[#E5EAF0] dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-[#697586] dark:text-slate-400">
+              <span className="tabular-nums">
+                Page {auditPage} of {auditTotalPages} · {auditTotal} records
+              </span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={auditPage <= 1}
+                  onClick={() => setAuditPage((p) => Math.max(1, p - 1))}
+                  className="px-3 py-1.5 rounded border border-[#E5EAF0] dark:border-slate-700 disabled:opacity-40 hover:bg-[#F6F8FB] dark:hover:bg-slate-800"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  disabled={auditPage >= auditTotalPages}
+                  onClick={() => setAuditPage((p) => p + 1)}
+                  className="px-3 py-1.5 rounded border border-[#E5EAF0] dark:border-slate-700 disabled:opacity-40 hover:bg-[#F6F8FB] dark:hover:bg-slate-800"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -982,7 +1019,7 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
               Institution & Platform Settings
             </h1>
             <p className="text-sm text-[#697586] dark:text-slate-400">
-              Attendance calculation policy, appearance, Firebase integration status, and demo management.
+              Attendance calculation policy, appearance, and Firebase integration status.
             </p>
           </div>
 
@@ -1106,23 +1143,23 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
           </form>
 
           {/* Firebase & Persistence Diagnostics */}
-          <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-6 space-y-4 text-sm">
-            <h2 className="text-base font-semibold text-[#172337] dark:text-slate-100">
+          <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-5 sm:p-6 space-y-2 text-sm">
+            <h2 className="text-base font-semibold text-[#172337] dark:text-slate-100 mb-2">
               Firebase & Persistence Status
             </h2>
-            <div className="flex justify-between py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
               <span className="text-[#697586] dark:text-slate-400">Firebase Project ID</span>
-              <span className="font-mono-tabular font-medium text-[#172337] dark:text-slate-100">
+              <span className="font-mono-tabular font-medium text-[#172337] dark:text-slate-100 break-all">
                 {systemStatus?.firebaseProjectId || 'athletic-serenity-gkx2q'}
               </span>
             </div>
-            <div className="flex justify-between py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
               <span className="text-[#697586] dark:text-slate-400">Firestore Database ID</span>
-              <span className="font-mono-tabular font-medium text-[#172337] dark:text-slate-100">
+              <span className="font-mono-tabular font-medium text-[#172337] dark:text-slate-100 break-all">
                 {systemStatus?.firestoreDatabaseId || 'ai-studio-e11bb378-4219-4cff-a61e-dd8da4971690'}
               </span>
             </div>
-            <div className="flex justify-between py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
               <span className="text-[#697586] dark:text-slate-400">Firestore Client Connection</span>
               <span
                 className={`font-medium ${
@@ -1132,9 +1169,9 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
                 {firestoreReachable ? 'Connected' : 'Offline'}
               </span>
             </div>
-            <div className="flex justify-between py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
               <span className="text-[#697586] dark:text-slate-400">Active Storage Mode</span>
-              <span className="font-mono-tabular font-medium text-[#172337] dark:text-slate-100">
+              <span className="font-mono-tabular font-medium text-[#172337] dark:text-slate-100 break-all">
                 {systemStatus?.storageMode === 'firestore_admin'
                   ? 'firestore_admin (Persistent Cloud Firestore)'
                   : systemStatus?.storageMode === 'dev_sandbox_memory'
@@ -1142,17 +1179,27 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
                     : 'unconfigured_error (HTTP 503 Guard Active)'}
               </span>
             </div>
-            <div className="flex justify-between py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
               <span className="text-[#697586] dark:text-slate-400">Firebase Admin Service Account</span>
-              <span className="font-medium text-[#172337] dark:text-slate-100 text-right max-w-sm">
+              <span className="font-medium text-[#172337] dark:text-slate-100 sm:text-right max-w-sm break-words">
                 {systemStatus?.firebaseAdminConnected
                   ? 'Configured (Direct Firestore Admin Transactions Active)'
                   : systemStatus?.hasServiceAccount
                     ? `Configured but unreachable (${systemStatus.firestoreError || 'Check IAM permissions'})`
-                    : 'Not configured (FIREBASE_SERVICE_ACCOUNT_JSON secret required for production)'}
+                    : 'Not configured (FIREBASE_SERVICE_ACCOUNT_JSON secret required)'}
               </span>
             </div>
-            <div className="flex justify-between py-2">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+              <span className="text-[#697586] dark:text-slate-400">Multi-Instance QR Pub/Sub</span>
+              <span className="font-medium text-[#172337] dark:text-slate-100 sm:text-right">
+                {systemStatus?.redisConnected
+                  ? 'Redis Connected (Cross-instance Sync & Locking Active)'
+                  : systemStatus?.redisConfigured
+                    ? 'Redis Configured (Reconnecting)'
+                    : 'Single-Instance Mode (Set REDIS_URL for horizontal scaling)'}
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2">
               <span className="text-[#697586] dark:text-slate-400">QR Token Policy</span>
               <span className="font-mono-tabular text-[#172337] dark:text-slate-100">
                 90s rotation · 15s grace window
@@ -1160,8 +1207,8 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
             </div>
           </div>
 
-          {isSystemAdmin && systemStatus?.demoModeEnabled && (
-            <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-6 flex items-center justify-between gap-4">
+          {!import.meta.env.PROD && isSystemAdmin && systemStatus?.demoModeEnabled && (
+            <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-sm font-semibold text-[#172337] dark:text-slate-100">Reset Demo Environment</h2>
                 <p className="text-xs text-[#697586] dark:text-slate-400 mt-0.5">
@@ -1171,7 +1218,7 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
               <button
                 type="button"
                 onClick={handleResetDemo}
-                className="min-h-[40px] px-4 py-2 rounded-lg border border-[#E5EAF0] dark:border-slate-700 hover:bg-[#F6F8FB] dark:hover:bg-slate-800 text-sm font-medium text-[#172337] dark:text-slate-100 inline-flex items-center gap-2 shrink-0"
+                className="min-h-[40px] px-4 py-2 rounded-lg border border-[#E5EAF0] dark:border-slate-700 hover:bg-[#F6F8FB] dark:hover:bg-slate-800 text-sm font-medium text-[#172337] dark:text-slate-100 inline-flex items-center gap-2 shrink-0 self-start sm:self-auto"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Reset Demo Data</span>
@@ -1196,7 +1243,7 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
               className="w-full min-h-[40px] px-3 py-2 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#09111E] text-[#172337] dark:text-slate-100"
             />
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-medium text-[#172337] dark:text-slate-200 mb-1">Code</label>
               <input
@@ -1208,7 +1255,7 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
                 className="w-full min-h-[40px] px-3 py-2 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#09111E] text-[#172337] dark:text-slate-100"
               />
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-[#172337] dark:text-slate-200 mb-1">
                 Department Name
               </label>
@@ -1239,7 +1286,7 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
 
       <Modal open={courseModalOpen} onClose={() => setCourseModalOpen(false)} title="Create Course">
         <form onSubmit={handleCreateCourse} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-[#172337] dark:text-slate-200 mb-1">Course Code</label>
               <input
@@ -1276,7 +1323,7 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
               className="w-full min-h-[40px] px-3 py-2 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#09111E] text-[#172337] dark:text-slate-100"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-[#172337] dark:text-slate-200 mb-1">Department</label>
               <select
@@ -1529,7 +1576,7 @@ export function AdminExperience({ onOpenPresentation }: { onOpenPresentation: (s
               className="w-full min-h-[40px] px-3 py-2 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#09111E] text-[#172337] dark:text-slate-100"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-[#172337] dark:text-slate-200 mb-1">Role</label>
               <select

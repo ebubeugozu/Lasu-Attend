@@ -114,7 +114,7 @@ export function InfoTooltip({ text }: { text: string }) {
       </button>
       <span
         role="tooltip"
-        className="pointer-events-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 rounded-lg bg-[#14243A] dark:bg-slate-800 border border-white/10 px-3 py-2 text-xs font-normal text-white shadow-lg z-40"
+        className="pointer-events-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 sm:w-60 max-w-[calc(100vw-32px)] rounded-lg bg-[#14243A] dark:bg-slate-800 border border-white/10 px-3 py-2 text-xs font-normal text-white shadow-lg z-40"
       >
         {text}
       </span>
@@ -150,26 +150,26 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D1828]/70 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0D1828]/70 backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
     >
       <div className={`w-full ${maxWidth} bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl shadow-xl overflow-hidden max-h-[92vh] flex flex-col`}>
-        <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-[#E5EAF0] dark:border-slate-800">
-          <div>
-            <h2 className="text-lg font-semibold text-[#172337] dark:text-slate-100">{title}</h2>
-            {subtitle && <p className="text-sm text-[#697586] dark:text-slate-400 mt-0.5">{subtitle}</p>}
+        <div className="flex items-start justify-between gap-3 px-4 sm:px-6 py-4 border-b border-[#E5EAF0] dark:border-slate-800">
+          <div className="min-w-0">
+            <h2 className="text-base sm:text-lg font-semibold text-[#172337] dark:text-slate-100 break-words">{title}</h2>
+            {subtitle && <p className="text-xs sm:text-sm text-[#697586] dark:text-slate-400 mt-0.5">{subtitle}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg text-[#697586] dark:text-slate-400 hover:text-[#172337] dark:hover:text-slate-100 hover:bg-[#F6F8FB] dark:hover:bg-slate-800 transition-colors"
+            className="min-h-[40px] min-w-[40px] shrink-0 flex items-center justify-center rounded-lg text-[#697586] dark:text-slate-400 hover:text-[#172337] dark:hover:text-slate-100 hover:bg-[#F6F8FB] dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto text-[#172337] dark:text-slate-100">{children}</div>
+        <div className="p-4 sm:p-6 overflow-y-auto text-[#172337] dark:text-slate-100">{children}</div>
       </div>
     </div>
   );

@@ -176,20 +176,20 @@ export function CheckInPage({ onDone }: { onDone: () => void }) {
   return (
     <div className="min-h-screen bg-[#F6F8FB] dark:bg-[#09111E] flex flex-col">
       {/* Compact Mobile Header */}
-      <header className="sticky top-0 z-20 bg-white dark:bg-[#0F1A2B] border-b border-[#E5EAF0] dark:border-slate-800 px-4 h-14 flex items-center justify-between gap-2">
+      <header className="sticky top-0 z-20 bg-white dark:bg-[#0F1A2B] border-b border-[#E5EAF0] dark:border-slate-800 px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={onDone}
-          className="min-h-[44px] px-2 inline-flex items-center gap-2 text-sm font-medium text-[#172337] dark:text-slate-100"
+          className="min-h-[40px] px-1.5 sm:px-2 inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-[#172337] dark:text-slate-100 shrink-0"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 shrink-0" />
           <span>Dashboard</span>
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <BrandMark size={24} />
-          <span className="text-sm font-bold text-[#14243A] dark:text-white">LASU Attend</span>
+          <span className="text-xs sm:text-sm font-bold text-[#14243A] dark:text-white truncate">LASU Attend</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <span className="hidden sm:inline text-xs font-mono-tabular text-[#697586] dark:text-slate-400">
             {user?.matricNumber || ''}
           </span>
@@ -279,15 +279,15 @@ export function CheckInPage({ onDone }: { onDone: () => void }) {
               </div>
 
               <div className="bg-[#F6F8FB] dark:bg-[#09111E] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-4 text-left space-y-2.5 text-sm">
-                <div className="flex justify-between">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                   <span className="text-[#697586] dark:text-slate-400">Student</span>
-                  <span className="font-medium text-[#172337] dark:text-slate-100">{successRecord.record.studentName}</span>
+                  <span className="font-medium text-[#172337] dark:text-slate-100 break-words">{successRecord.record.studentName}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                   <span className="text-[#697586] dark:text-slate-400">Matric Number</span>
                   <span className="font-mono-tabular font-medium text-[#172337] dark:text-slate-100">{successRecord.record.matricNumber}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                   <span className="text-[#697586] dark:text-slate-400">Status</span>
                   <span
                     className={`font-semibold capitalize ${
@@ -299,7 +299,7 @@ export function CheckInPage({ onDone }: { onDone: () => void }) {
                     {successRecord.record.status}
                   </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                   <span className="text-[#697586] dark:text-slate-400">Recorded Time</span>
                   <span className="font-mono-tabular text-[#172337] dark:text-slate-100">
                     {new Date(

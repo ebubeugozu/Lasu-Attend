@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build",
+    "build": "NODE_ENV=production vite build",
     "start": "node server.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
@@ -25,6 +25,7 @@
     "express": "^4.21.2",
     "firebase": "^13.3.0",
     "firebase-admin": "^14.5.1",
+    "ioredis": "^6.0.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "papaparse": "^5.7.1",

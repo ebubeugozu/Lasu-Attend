@@ -28,6 +28,8 @@ export interface SystemStatus {
   hasServiceAccount?: boolean;
   storageMode?: 'firestore_admin' | 'dev_sandbox_memory' | 'unconfigured_error';
   firestoreError?: string | null;
+  redisConfigured?: boolean;
+  redisConnected?: boolean;
 }
 
 interface AuthContextValue {
@@ -96,14 +98,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Boot check: Firestore connectivity + system status + demo accounts
+    // Boot check: Firestore connectivity + system status + optional demo accounts
     testFirestoreConnection().then((res) => setFirestoreReachable(res.reachable));
     apiFetch<SystemStatus>('/api/system/status')
-      .then((s) => setSystemStatus(s))
-      .catch(() => {});
-    apiFetch<{ enabled: boolean; accounts: DemoAccountSummary[] }>('/api/auth/demo-accounts')
-      .then((res) => {
-        if (res.enabled) setDemoAccounts(res.accounts);
+      .then((s) => {
+        setSystemStatus(s);
+        if (!import.meta.env.PROD && s.demoModeEnabled) {
+          apiFetch<{ enabled: boolean; accounts: DemoAccountSummary[] }>('/api/auth/demo-accounts')
+            .then((res) => {
+              if (res.enabled) setDemoAccounts(res.accounts);
+            })
+            .catch(() => {});
+        }
       })
       .catch(() => {});
 

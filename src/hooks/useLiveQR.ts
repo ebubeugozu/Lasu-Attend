@@ -12,6 +12,21 @@ export interface LiveQRState {
   error: string | null;
 }
 
+function buildWebSocketUrl(sessionId: string): string {
+  const configuredBase = (import.meta.env.VITE_WS_URL as string | undefined)?.trim();
+  if (configuredBase) {
+    const cleanBase = configuredBase.replace(/\/+$/, '');
+    const wsBase = cleanBase.startsWith('https://')
+      ? cleanBase.replace(/^https:\/\//, 'wss://')
+      : cleanBase.startsWith('http://')
+        ? cleanBase.replace(/^http:\/\//, 'ws://')
+        : cleanBase;
+    return `${wsBase}/ws?sessionId=${encodeURIComponent(sessionId)}`;
+  }
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${proto}//${window.location.host}/ws?sessionId=${encodeURIComponent(sessionId)}`;
+}
+
 export function useLiveQR(sessionId: string | null, enabled = true): LiveQRState {
   const [payload, setPayload] = useState<LiveQRPayload | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState('');
@@ -25,6 +40,8 @@ export function useLiveQR(sessionId: string | null, enabled = true): LiveQRState
     let active = true;
     let ws: WebSocket | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let reconnectAttempt = 0;
+    let hasConnectedOnce = false;
 
     const applyPayload = (next: LiveQRPayload) => {
       if (!active) return;
@@ -33,7 +50,7 @@ export function useLiveQR(sessionId: string | null, enabled = true): LiveQRState
       setError(null);
     };
 
-    const fetchInitial = async () => {
+    const fetchLatestPayload = async () => {
       try {
         const res = await apiFetch<LiveQRPayload>(`/api/sessions/${sessionId}/qr`);
         applyPayload(res);
@@ -44,16 +61,34 @@ export function useLiveQR(sessionId: string | null, enabled = true): LiveQRState
       }
     };
 
-    fetchInitial();
+    fetchLatestPayload();
 
     const connectWs = () => {
       if (!active) return;
-      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const url = `${proto}//${window.location.host}/ws?sessionId=${encodeURIComponent(sessionId)}`;
-      ws = new WebSocket(url);
+      const url = buildWebSocketUrl(sessionId);
+      try {
+        ws = new WebSocket(url);
+      } catch {
+        reconnectAttempt += 1;
+        const delayMs = Math.min(10000, 1000 * 2 ** Math.min(reconnectAttempt, 4));
+        reconnectTimer = setTimeout(connectWs, delayMs);
+        return;
+      }
 
       ws.onopen = () => {
-        if (active) setWsConnected(true);
+        if (!active) return;
+        const isReconnect = hasConnectedOnce;
+        hasConnectedOnce = true;
+        reconnectAttempt = 0;
+        setWsConnected(true);
+        try {
+          ws?.send(JSON.stringify({ type: 'subscribe', sessionId }));
+        } catch {
+          // ignore send errors on immediate close
+        }
+        if (isReconnect) {
+          void fetchLatestPayload();
+        }
       };
 
       ws.onmessage = (event) => {
@@ -68,7 +103,7 @@ export function useLiveQR(sessionId: string | null, enabled = true): LiveQRState
           };
           if ((msg.type === 'qr:sync' || msg.type === 'qr:rotated') && msg.payload) {
             applyPayload(msg.payload);
-          } else if (msg.type === 'attendance:checkin') {
+          } else if (msg.type === 'attendance:checkin' || msg.type === 'attendance:corrected') {
             setPayload((prev) =>
               prev
                 ? {
@@ -93,7 +128,9 @@ export function useLiveQR(sessionId: string | null, enabled = true): LiveQRState
       ws.onclose = () => {
         if (!active) return;
         setWsConnected(false);
-        reconnectTimer = setTimeout(connectWs, 2500);
+        reconnectAttempt += 1;
+        const delayMs = Math.min(10000, 1000 * 2 ** Math.min(reconnectAttempt, 4));
+        reconnectTimer = setTimeout(connectWs, delayMs);
       };
     };
 

@@ -234,7 +234,7 @@ export function StudentExperience({ onOpenCheckIn }: { onOpenCheckIn: (code?: st
                           : 'Percentages appear once your enrolled courses complete a lecture session.'}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right">
                       <span className="text-xs font-mono-tabular text-[#697586] dark:text-slate-400 block">
                         Matric: {data.student.matricNumber}
                       </span>
@@ -459,7 +459,7 @@ export function StudentExperience({ onOpenCheckIn }: { onOpenCheckIn: (code?: st
                         />
                       </div>
 
-                      <div className="grid grid-cols-4 gap-2 pt-1 text-xs font-mono-tabular">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 text-xs font-mono-tabular">
                         <div>
                           <span className="text-[#697586] dark:text-slate-400 block text-[11px]">Present</span>
                           <span className="font-semibold text-[#16845B] dark:text-emerald-400">{c.presentCount}</span>
@@ -563,7 +563,7 @@ export function StudentExperience({ onOpenCheckIn }: { onOpenCheckIn: (code?: st
                 <select
                   value={historyFilterCourse}
                   onChange={(e) => setHistoryFilterCourse(e.target.value)}
-                  className="min-h-[40px] px-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#09111E] text-[#172337] dark:text-slate-100"
+                  className="min-h-[40px] px-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#09111E] text-[#172337] dark:text-slate-100 w-full sm:w-auto"
                 >
                   <option value="">All Courses</option>
                   {data.courses.map((c) => (
@@ -731,32 +731,32 @@ export function StudentExperience({ onOpenCheckIn }: { onOpenCheckIn: (code?: st
                   Your official register identity and display preferences.
                 </p>
               </div>
-              <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-6 space-y-3.5 text-sm">
-                <div className="flex justify-between py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+              <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-5 sm:p-6 space-y-2 text-sm">
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
                   <span className="text-[#697586] dark:text-slate-400">Full Name</span>
-                  <span className="font-medium text-[#172337] dark:text-slate-100">{data.student.fullName}</span>
+                  <span className="font-medium text-[#172337] dark:text-slate-100 break-words">{data.student.fullName}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
                   <span className="text-[#697586] dark:text-slate-400">Matriculation Number</span>
                   <span className="font-mono-tabular font-semibold text-[#172337] dark:text-slate-100">
                     {data.student.matricNumber}
                   </span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
                   <span className="text-[#697586] dark:text-slate-400">Department</span>
-                  <span className="font-medium text-[#172337] dark:text-slate-100">{data.student.departmentName}</span>
+                  <span className="font-medium text-[#172337] dark:text-slate-100 break-words">{data.student.departmentName}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
                   <span className="text-[#697586] dark:text-slate-400">Faculty</span>
-                  <span className="font-medium text-[#172337] dark:text-slate-100">{data.student.facultyName}</span>
+                  <span className="font-medium text-[#172337] dark:text-slate-100 break-words">{data.student.facultyName}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
                   <span className="text-[#697586] dark:text-slate-400">Level</span>
                   <span className="font-mono-tabular font-medium text-[#172337] dark:text-slate-100">
                     {data.student.level}
                   </span>
                 </div>
-                <div className="flex justify-between py-2">
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2">
                   <span className="text-[#697586] dark:text-slate-400">Account Status</span>
                   <StatusLabel status={data.student.accountStatus} />
                 </div>

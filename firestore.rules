@@ -33,10 +33,6 @@ service cloud.firestore {
       return isVerifiedUser() && request.auth.uid == uid;
     }
 
-    function isBootstrappedAdmin() {
-      return isVerifiedUser() && request.auth.token.email == 'ebubeugozu79@gmail.com';
-    }
-
     function hasUserDoc() {
       return exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
@@ -46,8 +42,7 @@ service cloud.firestore {
     }
 
     function isSystemAdmin() {
-      return isBootstrappedAdmin() ||
-        (isVerifiedUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid))) ||
+      return (isVerifiedUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid))) ||
         (isVerifiedUser() && hasUserDoc() && userDoc().role == 'system_admin' && userDoc().status == 'active');
     }
 
@@ -179,7 +174,7 @@ service cloud.firestore {
 
     function isValidAttendanceSession(data) {
       return data.keys().hasAll(['id', 'courseId', 'courseCode', 'courseTitle', 'departmentId', 'lecturerUid', 'lecturerName', 'sessionDate', 'startTime', 'lateThresholdMinutes', 'status', 'checkpointActive', 'totalEnrolled', 'presentCount', 'lateCount', 'absentCount', 'verifiedCount', 'isDemo', 'createdAt', 'updatedAt']) &&
-        data.keys().hasOnly(['id', 'courseId', 'courseCode', 'courseTitle', 'departmentId', 'lecturerUid', 'lecturerName', 'lectureTitle', 'venue', 'sessionDate', 'startTime', 'lateThresholdMinutes', 'status', 'checkpointActive', 'totalEnrolled', 'presentCount', 'lateCount', 'absentCount', 'verifiedCount', 'isDemo', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['id', 'courseId', 'courseCode', 'courseTitle', 'departmentId', 'lecturerUid', 'lecturerName', 'lectureTitle', 'venue', 'sessionDate', 'startTime', 'openedAt', 'closedAt', 'rotationIntervalSeconds', 'gracePeriodSeconds', 'checkpointStartedAt', 'failedAttemptCount', 'lateThresholdMinutes', 'status', 'checkpointActive', 'totalEnrolled', 'presentCount', 'lateCount', 'absentCount', 'verifiedCount', 'isDemo', 'createdAt', 'updatedAt']) &&
         isValidId(data.id) &&
         isValidId(data.courseId) &&
         data.courseCode is string && data.courseCode.size() >= 2 && data.courseCode.size() <= 24 &&
@@ -191,6 +186,12 @@ service cloud.firestore {
         (!('venue' in data) || (data.venue is string && data.venue.size() <= 120)) &&
         data.sessionDate is string && data.sessionDate.size() >= 8 && data.sessionDate.size() <= 24 &&
         data.startTime is string && data.startTime.size() >= 4 && data.startTime.size() <= 24 &&
+        (!('openedAt' in data) || (data.openedAt is string && data.openedAt.size() <= 40)) &&
+        (!('closedAt' in data) || (data.closedAt is string && data.closedAt.size() <= 40)) &&
+        (!('checkpointStartedAt' in data) || (data.checkpointStartedAt is string && data.checkpointStartedAt.size() <= 40)) &&
+        (!('rotationIntervalSeconds' in data) || (data.rotationIntervalSeconds is int && data.rotationIntervalSeconds >= 15 && data.rotationIntervalSeconds <= 600)) &&
+        (!('gracePeriodSeconds' in data) || (data.gracePeriodSeconds is int && data.gracePeriodSeconds >= 0 && data.gracePeriodSeconds <= 120)) &&
+        (!('failedAttemptCount' in data) || (data.failedAttemptCount is int && data.failedAttemptCount >= 0)) &&
         data.lateThresholdMinutes is int && data.lateThresholdMinutes >= 0 && data.lateThresholdMinutes <= 180 &&
         data.status in ['scheduled', 'live', 'completed', 'cancelled'] &&
         data.checkpointActive is bool &&
@@ -206,7 +207,7 @@ service cloud.firestore {
 
     function isValidAttendanceRecord(data) {
       return data.keys().hasAll(['id', 'sessionId', 'courseId', 'lecturerUid', 'studentId', 'matricNumber', 'studentName', 'status', 'checkpointStatus', 'createdAt', 'updatedAt']) &&
-        data.keys().hasOnly(['id', 'sessionId', 'courseId', 'lecturerUid', 'studentId', 'studentUid', 'matricNumber', 'studentName', 'status', 'checkInTime', 'checkpointStatus', 'checkpointTime', 'correctedByUid', 'correctionReason', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['id', 'sessionId', 'courseId', 'lecturerUid', 'studentId', 'studentUid', 'matricNumber', 'studentName', 'status', 'checkInTime', 'checkpointStatus', 'checkpointTime', 'correctedByUid', 'correctedByName', 'correctionReason', 'correctedAt', 'createdAt', 'updatedAt']) &&
         isValidId(data.id) &&
         isValidId(data.sessionId) &&
         isValidId(data.courseId) &&
@@ -220,7 +221,9 @@ service cloud.firestore {
         data.checkpointStatus in ['none', 'completed', 'missed'] &&
         (!('checkpointTime' in data) || (data.checkpointTime is string && data.checkpointTime.size() <= 40)) &&
         (!('correctedByUid' in data) || (data.correctedByUid is string && data.correctedByUid.size() <= 128)) &&
+        (!('correctedByName' in data) || (data.correctedByName is string && data.correctedByName.size() <= 120)) &&
         (!('correctionReason' in data) || (data.correctionReason is string && data.correctionReason.size() <= 300)) &&
+        (!('correctedAt' in data) || (data.correctedAt is string && data.correctedAt.size() <= 40)) &&
         data.createdAt is timestamp &&
         data.updatedAt is timestamp;
     }
@@ -273,7 +276,7 @@ service cloud.firestore {
     match /admins/{adminUid} {
       allow get: if isVerifiedUser() && isValidId(adminUid) && (isOwner(adminUid) || isSystemAdmin());
       allow list: if false;
-      allow create, update, delete: if isBootstrappedAdmin() && isValidId(adminUid);
+      allow create, update, delete: if false;
     }
 
     match /institutions/{institutionId} {
@@ -301,7 +304,7 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow get: if isVerifiedUser() && isValidId(userId) && (isOwner(userId) || isSystemAdmin());
-      allow list: if isVerifiedUser() && (resource.data.uid == request.auth.uid || isBootstrappedAdmin());
+      allow list: if isVerifiedUser() && resource.data.uid == request.auth.uid;
       allow create: if isVerifiedUser() && isValidId(userId) && isValidUser(incoming()) &&
         incoming().uid == userId &&
         incoming().createdAt == request.time &&
@@ -328,7 +331,7 @@ service cloud.firestore {
         isLecturer() ||
         existing().claimedUid == request.auth.uid
       );
-      allow list: if isVerifiedUser() && (resource.data.claimedUid == request.auth.uid || isBootstrappedAdmin());
+      allow list: if isVerifiedUser() && resource.data.claimedUid == request.auth.uid;
       allow create: if isVerifiedUser() && isValidId(studentId) && isValidStudent(incoming()) &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
@@ -350,8 +353,7 @@ service cloud.firestore {
       );
       allow list: if isVerifiedUser() && (
         resource.data.lecturerUid == request.auth.uid ||
-        resource.data.status == 'active' ||
-        isBootstrappedAdmin()
+        resource.data.status == 'active'
       );
       allow create: if isVerifiedUser() && isValidId(courseId) && isValidCourse(incoming()) &&
         incoming().createdAt == request.time &&
@@ -377,8 +379,7 @@ service cloud.firestore {
       );
       allow list: if isVerifiedUser() && (
         resource.data.studentUid == request.auth.uid ||
-        resource.data.lecturerUid == request.auth.uid ||
-        isBootstrappedAdmin()
+        resource.data.lecturerUid == request.auth.uid
       );
       allow create: if isVerifiedUser() && isValidId(enrolmentId) && isValidEnrolment(incoming()) &&
         incoming().enrolledAt == request.time &&
@@ -398,8 +399,7 @@ service cloud.firestore {
       allow get: if isVerifiedUser() && isValidId(sessionId);
       allow list: if isVerifiedUser() && (
         resource.data.lecturerUid == request.auth.uid ||
-        resource.data.status == 'live' ||
-        isBootstrappedAdmin()
+        resource.data.status == 'live'
       );
       allow create: if isVerifiedUser() && isValidId(sessionId) && isValidAttendanceSession(incoming()) &&
         incoming().createdAt == request.time &&
@@ -431,8 +431,7 @@ service cloud.firestore {
       );
       allow list: if isVerifiedUser() && (
         resource.data.studentUid == request.auth.uid ||
-        resource.data.lecturerUid == request.auth.uid ||
-        isBootstrappedAdmin()
+        resource.data.lecturerUid == request.auth.uid
       );
       allow create: if isVerifiedUser() && isValidId(recordId) && isValidAttendanceRecord(incoming()) &&
         incoming().createdAt == request.time &&
@@ -462,8 +461,7 @@ service cloud.firestore {
       );
       allow list: if isVerifiedUser() && (
         resource.data.studentUid == request.auth.uid ||
-        resource.data.lecturerUid == request.auth.uid ||
-        isBootstrappedAdmin()
+        resource.data.lecturerUid == request.auth.uid
       );
       allow create: if isVerifiedUser() && isValidId(eventId) && isValidCheckpointEvent(incoming()) &&
         incoming().verifiedAt == request.time &&
@@ -477,15 +475,17 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /failedAttempts/{attemptId} {
+      // Strictly server-only via Firebase Admin SDK; zero client access.
+      allow read, write: if false;
+    }
+
     match /auditLogs/{logId} {
       allow get: if isVerifiedUser() && isValidId(logId) && (
         isSystemAdmin() ||
         existing().actorUid == request.auth.uid
       );
-      allow list: if isVerifiedUser() && (
-        resource.data.actorUid == request.auth.uid ||
-        isBootstrappedAdmin()
-      );
+      allow list: if isVerifiedUser() && resource.data.actorUid == request.auth.uid;
       allow create: if isVerifiedUser() && isValidId(logId) && isValidAuditLog(incoming()) &&
         incoming().actorUid == request.auth.uid &&
         incoming().createdAt == request.time &&
@@ -498,10 +498,7 @@ service cloud.firestore {
         existing().recipientUid == request.auth.uid ||
         isSystemAdmin()
       );
-      allow list: if isVerifiedUser() && (
-        resource.data.recipientUid == request.auth.uid ||
-        isBootstrappedAdmin()
-      );
+      allow list: if isVerifiedUser() && resource.data.recipientUid == request.auth.uid;
       allow create: if isVerifiedUser() && isValidId(notificationId) && isValidNotification(incoming()) &&
         incoming().createdAt == request.time &&
         (isSystemAdmin() || isLecturer());

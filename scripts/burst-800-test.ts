@@ -99,7 +99,7 @@ async function run800BurstTest() {
     );
     assert.equal(dupResponses.every((s) => s === 409), true);
 
-    const sessionAfter = db.state.sessions.find((s) => s.id === sessionId)!;
+    const sessionAfter = (await db.getSessionById(sessionId))!;
     assert.equal(sessionAfter.presentCount + sessionAfter.lateCount, 800);
 
     console.log(
@@ -121,6 +121,7 @@ async function run800BurstTest() {
     // Cleanly reset dataset after test
     await db.seedFirestoreDemo();
   } finally {
+    qrEngine.destroy();
     server.close();
   }
 }

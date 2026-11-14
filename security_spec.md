@@ -15,7 +15,7 @@
 3. **Privilege Escalation on Registration (`CREATE /users/{uid}`)**: New user sends `{ uid: auth.uid, role: 'system_admin', status: 'active' }` -> MUST return `PERMISSION_DENIED`.
 4. **Role Self-Promotion on Update (`UPDATE /users/{uid}`)**: Existing student updates `{ role: 'lecturer' }` -> MUST return `PERMISSION_DENIED`.
 5. **Cross-Department Admin Tampering (`UPDATE /courses/cpe201`)**: Department admin for `dept_mec` tries to update a course in `dept_cpe` -> MUST return `PERMISSION_DENIED`.
-6. **Unverified Email Spoofing (`READ/WRITE`)**: User with `email: 'ebubeugozu79@gmail.com'` and `email_verified: false` attempts admin operation -> MUST return `PERMISSION_DENIED`.
+6. **Unverified Email Spoofing (`READ/WRITE`)**: User with `email: 'admin@lasu.edu.ng'` and `email_verified: false` attempts admin operation -> MUST return `PERMISSION_DENIED`.
 7. **Shadow Field Injection (`UPDATE /attendanceSessions/s1`)**: Lecturer updates session with an unexpected ghost key `{ isApprovedByDean: true }` -> MUST return `PERMISSION_DENIED`.
 8. **ID Poisoning / Denial of Wallet (`CREATE /courses/<2000-char-id>`)**: Attacker sends oversized document ID or 1MB `courseTitle` -> MUST return `PERMISSION_DENIED`.
 9. **Terminal State Bypass (`UPDATE /attendanceSessions/s1`)**: Lecturer attempts to reopen a `'completed'` session back to `'live'` -> MUST return `PERMISSION_DENIED`.

@@ -47,10 +47,10 @@ export function ActivationPage({ compact = false, onActivated }: { compact?: boo
   }
 
   return (
-    <div className={compact ? '' : 'min-h-screen bg-[#F6F8FB] dark:bg-[#09111E] flex items-center justify-center p-6'}>
-      <div className="max-w-lg w-full bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-6 md:p-8">
+    <div className={compact ? '' : 'min-h-screen bg-[#F6F8FB] dark:bg-[#09111E] flex items-center justify-center p-4 sm:p-6'}>
+      <div className="max-w-lg w-full bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-5 sm:p-6 md:p-8">
         {!compact && (
-          <div className="flex items-center justify-between border-b border-[#E5EAF0] dark:border-slate-800 pb-4 mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E5EAF0] dark:border-slate-800 pb-4 mb-6">
             <div className="flex items-center gap-2.5">
               <BrandMark size={28} />
               <span className="font-semibold text-[#172337] dark:text-slate-100">LASU Attend</span>

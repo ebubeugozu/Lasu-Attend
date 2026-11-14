@@ -200,44 +200,44 @@ export function AppShell({
       {/* Main Content Area */}
       <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="sticky top-0 z-20 h-16 bg-white dark:bg-[#0F1A2B] border-b border-[#E5EAF0] dark:border-slate-800 px-4 md:px-6 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="sticky top-0 z-20 h-16 bg-white dark:bg-[#0F1A2B] border-b border-[#E5EAF0] dark:border-slate-800 px-3 sm:px-4 md:px-6 flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button
               type="button"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open navigation"
-              className="lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[#172337] dark:text-slate-200 hover:bg-[#F6F8FB] dark:hover:bg-slate-800"
+              className="lg:hidden min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg text-[#172337] dark:text-slate-200 hover:bg-[#F6F8FB] dark:hover:bg-slate-800 shrink-0"
             >
               <Menu className="w-5 h-5" />
             </button>
 
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 text-xs text-[#697586] dark:text-slate-400">
-                <span className="whitespace-nowrap">{todayFormatted}</span>
-                {isDemoSession && (
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 text-[11px] sm:text-xs text-[#697586] dark:text-slate-400">
+                <span className="truncate">{todayFormatted}</span>
+                {!import.meta.env.PROD && isDemoSession && (
                   <>
-                    <span aria-hidden="true">·</span>
-                    <span className="font-medium text-[#D99020] dark:text-amber-400 truncate">
+                    <span aria-hidden="true" className="hidden sm:inline">·</span>
+                    <span className="hidden sm:inline font-medium text-[#D99020] dark:text-amber-400 truncate">
                       Demo Environment (Sample Data)
                     </span>
                   </>
                 )}
               </div>
-              <p className="text-sm font-semibold text-[#172337] dark:text-slate-100 truncate">
+              <p className="text-xs sm:text-sm font-semibold text-[#172337] dark:text-slate-100 truncate">
                 Welcome, {user?.displayName}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {primaryAction && (
               <button
                 type="button"
                 onClick={primaryAction.onClick}
-                className="min-h-[40px] px-3.5 md:px-4 py-2 rounded-lg bg-[#4263EB] hover:bg-[#3451C7] text-white text-sm font-medium inline-flex items-center gap-2 transition-colors whitespace-nowrap shrink-0"
+                className="min-h-[38px] sm:min-h-[40px] px-2.5 sm:px-3.5 md:px-4 py-1.5 sm:py-2 rounded-lg bg-[#4263EB] hover:bg-[#3451C7] text-white text-xs sm:text-sm font-medium inline-flex items-center gap-1.5 sm:gap-2 transition-colors whitespace-nowrap shrink-0 max-w-[118px] sm:max-w-none"
               >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>{primaryAction.label}</span>
+                <Play className="w-3.5 h-3.5 fill-current shrink-0" />
+                <span className="truncate">{primaryAction.label}</span>
               </button>
             )}
 
@@ -252,7 +252,7 @@ export function AppShell({
                   setNotifOpen((v) => !v);
                   setProfileOpen(false);
                 }}
-                className="relative min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border border-[#E5EAF0] dark:border-slate-700 bg-white dark:bg-[#14243A] hover:bg-[#F6F8FB] dark:hover:bg-slate-800 text-[#172337] dark:text-slate-200"
+                className="relative min-h-[38px] min-w-[38px] sm:min-h-[40px] sm:min-w-[40px] flex items-center justify-center rounded-lg border border-[#E5EAF0] dark:border-slate-700 bg-white dark:bg-[#14243A] hover:bg-[#F6F8FB] dark:hover:bg-slate-800 text-[#172337] dark:text-slate-200"
               >
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
@@ -263,7 +263,7 @@ export function AppShell({
               </button>
 
               {notifOpen && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 max-w-[92vw] bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-700 rounded-xl shadow-xl z-40 overflow-hidden">
+                <div className="fixed left-3 right-3 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96 bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-700 rounded-xl shadow-xl z-40 overflow-hidden">
                   <div className="px-4 py-3 border-b border-[#E5EAF0] dark:border-slate-800 flex items-center justify-between gap-2">
                     <div>
                       <span className="text-sm font-semibold text-[#172337] dark:text-slate-100">Notifications</span>
@@ -335,7 +335,7 @@ export function AppShell({
                   setProfileOpen((v) => !v);
                   setNotifOpen(false);
                 }}
-                className="min-h-[40px] pl-3 pr-2.5 py-1.5 rounded-lg border border-[#E5EAF0] dark:border-slate-700 bg-white dark:bg-[#14243A] hover:bg-[#F6F8FB] dark:hover:bg-slate-800 flex items-center gap-2 text-sm font-medium text-[#172337] dark:text-slate-100"
+                className="min-h-[38px] sm:min-h-[40px] pl-2.5 sm:pl-3 pr-2 sm:pr-2.5 py-1.5 rounded-lg border border-[#E5EAF0] dark:border-slate-700 bg-white dark:bg-[#14243A] hover:bg-[#F6F8FB] dark:hover:bg-slate-800 flex items-center gap-1.5 sm:gap-2 text-sm font-medium text-[#172337] dark:text-slate-100"
               >
                 <span className="w-6 h-6 rounded-md bg-[#14243A] dark:bg-[#4263EB] text-white text-xs font-semibold flex items-center justify-center">
                   {(user?.displayName || 'U').charAt(0).toUpperCase()}
@@ -344,7 +344,7 @@ export function AppShell({
               </button>
 
               {profileOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-700 rounded-xl shadow-xl z-40 p-2 space-y-2">
+                <div className="fixed left-3 right-3 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-64 bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-700 rounded-xl shadow-xl z-40 p-2 space-y-2">
                   <div className="px-3 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
                     <p className="text-xs font-semibold text-[#172337] dark:text-slate-100 truncate">{user?.displayName}</p>
                     <p className="text-xs text-[#697586] dark:text-slate-400 truncate">{user?.email}</p>
@@ -369,7 +369,7 @@ export function AppShell({
         </header>
 
         {/* Main Viewport */}
-        <main className={`flex-1 p-4 md:p-6 lg:p-8 max-w-[1440px] w-full mx-auto ${mobileBottomTabs ? 'pb-24 md:pb-8' : ''}`}>
+        <main className={`flex-1 p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1440px] w-full mx-auto ${mobileBottomTabs ? 'pb-24 md:pb-8' : ''}`}>
           {children}
         </main>
       </div>

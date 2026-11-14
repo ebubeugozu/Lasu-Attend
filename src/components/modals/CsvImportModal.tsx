@@ -169,14 +169,14 @@ export function CsvImportModal({
     >
       {step === 'upload' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between bg-[#F6F8FB] dark:bg-[#09111E] border border-[#E5EAF0] dark:border-slate-800 rounded-lg px-4 py-3">
-            <div className="text-xs text-[#697586] dark:text-slate-400">
-              Required columns: <span className="font-mono-tabular text-[#172337] dark:text-slate-200">full_name, matric_number, department, faculty, level, account_status</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#F6F8FB] dark:bg-[#09111E] border border-[#E5EAF0] dark:border-slate-800 rounded-lg px-4 py-3">
+            <div className="text-xs text-[#697586] dark:text-slate-400 break-words">
+              Required columns: <span className="font-mono-tabular text-[#172337] dark:text-slate-200 break-all">full_name, matric_number, department, faculty, level, account_status</span>
             </div>
             <button
               type="button"
               onClick={downloadTemplate}
-              className="text-xs font-medium text-[#4263EB] dark:text-blue-400 hover:underline inline-flex items-center gap-1 whitespace-nowrap shrink-0 ml-3"
+              className="text-xs font-medium text-[#4263EB] dark:text-blue-400 hover:underline inline-flex items-center gap-1 whitespace-nowrap shrink-0 self-start sm:self-auto"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Sample CSV</span>
@@ -189,7 +189,7 @@ export function CsvImportModal({
             </div>
           )}
 
-          <label className="block border-2 border-dashed border-[#E5EAF0] dark:border-slate-700 hover:border-[#4263EB] rounded-xl p-10 text-center cursor-pointer transition-colors">
+          <label className="block border-2 border-dashed border-[#E5EAF0] dark:border-slate-700 hover:border-[#4263EB] rounded-xl p-6 sm:p-10 text-center cursor-pointer transition-colors">
             <Upload className="w-8 h-8 text-[#4263EB] dark:text-blue-400 mx-auto mb-3" />
             <p className="text-sm font-semibold text-[#172337] dark:text-slate-100">Select a CSV file to upload</p>
             <p className="text-xs text-[#697586] dark:text-slate-400 mt-1">All rows are validated before saving. Invalid rows are never silently discarded.</p>
@@ -208,9 +208,9 @@ export function CsvImportModal({
 
       {step === 'preview' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-3">
-            <div className="border border-[#E5EAF0] dark:border-slate-800 rounded-lg p-3">
-              <p className="text-xs text-[#697586] dark:text-slate-400">File ({fileName})</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="border border-[#E5EAF0] dark:border-slate-800 rounded-lg p-3 min-w-0">
+              <p className="text-xs text-[#697586] dark:text-slate-400 truncate">File ({fileName})</p>
               <p className="text-lg font-bold font-mono-tabular text-[#172337] dark:text-slate-100">{parsedRows.length} rows</p>
             </div>
             <div className="border border-[#E5EAF0] dark:border-slate-800 rounded-lg p-3">
@@ -223,7 +223,7 @@ export function CsvImportModal({
             </div>
           </div>
 
-          <div className="border border-[#E5EAF0] dark:border-slate-800 rounded-lg overflow-hidden max-h-72 overflow-y-auto">
+          <div className="border border-[#E5EAF0] dark:border-slate-800 rounded-lg overflow-x-auto max-h-72 overflow-y-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#F6F8FB] dark:bg-[#09111E] border-b border-[#E5EAF0] dark:border-slate-800 text-[#697586] dark:text-slate-400">
                 <tr>
@@ -256,7 +256,7 @@ export function CsvImportModal({
             </table>
           </div>
 
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
             <button
               type="button"
               onClick={reset}
@@ -278,7 +278,7 @@ export function CsvImportModal({
 
       {step === 'result' && result && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="border border-[#E5EAF0] dark:border-slate-800 rounded-lg p-4 flex items-center gap-3">
               <CheckCircle2 className="w-6 h-6 text-[#16845B] dark:text-emerald-400 shrink-0" />
               <div>

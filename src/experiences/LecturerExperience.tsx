@@ -825,7 +825,7 @@ export function LecturerExperience({ onOpenPresentation }: { onOpenPresentation:
                 Monitor check-ins, manage second checkpoints, and project the rotating QR code.
               </p>
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
               <select
                 value={selectedSession?.id || ''}
                 onChange={(e) => {
@@ -833,7 +833,7 @@ export function LecturerExperience({ onOpenPresentation }: { onOpenPresentation:
                   setSelectedSession(found);
                 }}
                 aria-label="Select session"
-                className="min-h-[40px] px-3 py-2 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#0F1A2B] text-[#172337] dark:text-slate-100 max-w-xs"
+                className="min-h-[40px] px-3 py-2 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#0F1A2B] text-[#172337] dark:text-slate-100 w-full sm:max-w-xs"
               >
                 <option value="">Select a session...</option>
                 {sessions.map((s) => (
@@ -985,8 +985,8 @@ export function LecturerExperience({ onOpenPresentation }: { onOpenPresentation:
                 {studentTotal} students across your courses
               </p>
             </div>
-            <div className="flex flex-wrap gap-2.5">
-              <div className="relative">
+            <div className="w-full sm:w-auto flex flex-col sm:flex-row sm:flex-wrap gap-2.5">
+              <div className="relative w-full sm:w-56">
                 <Search className="w-4 h-4 text-[#697586] dark:text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="search"
@@ -996,7 +996,7 @@ export function LecturerExperience({ onOpenPresentation }: { onOpenPresentation:
                     setStudentPage(1);
                   }}
                   placeholder="Search name or matric..."
-                  className="min-h-[38px] pl-9 pr-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#0F1A2B] text-[#172337] dark:text-slate-100"
+                  className="min-h-[38px] pl-9 pr-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#0F1A2B] text-[#172337] dark:text-slate-100 w-full"
                 />
               </div>
               <select
@@ -1005,7 +1005,7 @@ export function LecturerExperience({ onOpenPresentation }: { onOpenPresentation:
                   setStudentCourseFilter(e.target.value);
                   setStudentPage(1);
                 }}
-                className="min-h-[38px] px-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#0F1A2B] text-[#172337] dark:text-slate-100"
+                className="min-h-[38px] px-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#0F1A2B] text-[#172337] dark:text-slate-100 w-full sm:w-auto"
               >
                 <option value="">All My Courses</option>
                 {courses.map((c) => (
@@ -1094,22 +1094,22 @@ export function LecturerExperience({ onOpenPresentation }: { onOpenPresentation:
             <ThemeSwitcher variant="segmented" />
           </div>
 
-          <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-6 space-y-4 text-sm">
-            <div className="flex justify-between py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+          <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-5 sm:p-6 space-y-2 text-sm">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
               <span className="text-[#697586] dark:text-slate-400">Lecturer Name</span>
-              <span className="font-medium text-[#172337] dark:text-slate-100">{user?.displayName}</span>
+              <span className="font-medium text-[#172337] dark:text-slate-100 break-words">{user?.displayName}</span>
             </div>
-            <div className="flex justify-between py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
               <span className="text-[#697586] dark:text-slate-400">Email</span>
-              <span className="font-medium text-[#172337] dark:text-slate-100">{user?.email}</span>
+              <span className="font-medium text-[#172337] dark:text-slate-100 break-all">{user?.email}</span>
             </div>
-            <div className="flex justify-between py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
               <span className="text-[#697586] dark:text-slate-400">Default QR Rotation Interval</span>
               <span className="font-mono-tabular font-medium text-[#172337] dark:text-slate-100">
                 90 seconds (15s grace period)
               </span>
             </div>
-            <div className="flex justify-between py-2 border-b border-[#E5EAF0] dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2 border-b border-[#E5EAF0] dark:border-slate-800">
               <span className="text-[#697586] dark:text-slate-400">Firestore Client Connection</span>
               <span
                 className={`font-medium ${
@@ -1119,12 +1119,14 @@ export function LecturerExperience({ onOpenPresentation }: { onOpenPresentation:
                 {firestoreReachable ? 'Connected' : 'Offline'}
               </span>
             </div>
-            <div className="flex justify-between py-2">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 py-2">
               <span className="text-[#697586] dark:text-slate-400">Backend Persistence Mode</span>
-              <span className="font-medium text-[#172337] dark:text-slate-100">
+              <span className="font-medium text-[#172337] dark:text-slate-100 sm:text-right">
                 {systemStatus?.storageMode === 'firestore_admin'
                   ? 'Cloud Firestore (Admin SDK)'
-                  : 'Dev In-Memory Sandbox (Service Account Required for Production)'}
+                  : systemStatus?.storageMode === 'dev_sandbox_memory'
+                    ? 'Development Sandbox (In-Memory)'
+                    : 'Database Configuration Required'}
               </span>
             </div>
           </div>
@@ -1146,7 +1148,7 @@ export function LecturerExperience({ onOpenPresentation }: { onOpenPresentation:
 
       <Modal open={createCourseOpen} onClose={() => setCreateCourseOpen(false)} title="Create Course">
         <form onSubmit={handleCreateCourse} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-[#172337] dark:text-slate-200 mb-1">Course Code</label>
               <input

@@ -192,9 +192,9 @@ export function LiveSessionPanel({
   return (
     <div className="space-y-6">
       {/* Session Header + Action Controls */}
-      <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-5 md:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <div className="flex flex-wrap items-center gap-2.5 text-xs text-[#697586] dark:text-slate-400">
+      <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-4 sm:p-5 md:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-[#697586] dark:text-slate-400">
             <StatusLabel status={session.status} />
             <span aria-hidden="true">·</span>
             <span className="font-mono-tabular">{session.sessionDate}</span>
@@ -203,7 +203,7 @@ export function LiveSessionPanel({
             {session.venue && (
               <>
                 <span aria-hidden="true">·</span>
-                <span>{session.venue}</span>
+                <span className="break-words">{session.venue}</span>
               </>
             )}
             {isLive && (
@@ -215,10 +215,10 @@ export function LiveSessionPanel({
               </>
             )}
           </div>
-          <h2 className="text-xl font-bold text-[#172337] dark:text-slate-100 mt-1">
+          <h2 className="text-lg sm:text-xl font-bold text-[#172337] dark:text-slate-100 mt-1 break-words">
             {session.courseCode} — {session.courseTitle}
           </h2>
-          {session.lectureTitle && <p className="text-sm text-[#697586] dark:text-slate-400 mt-0.5">{session.lectureTitle}</p>}
+          {session.lectureTitle && <p className="text-sm text-[#697586] dark:text-slate-400 mt-0.5 break-words">{session.lectureTitle}</p>}
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
@@ -238,9 +238,9 @@ export function LiveSessionPanel({
               <button
                 type="button"
                 onClick={() => onOpenPresentation(session.id)}
-                className="min-h-[40px] px-3.5 py-2 rounded-lg bg-[#14243A] hover:bg-[#0D1828] dark:bg-[#4263EB] dark:hover:bg-[#3451C7] text-white text-sm font-medium inline-flex items-center gap-2 transition-colors whitespace-nowrap"
+                className="min-h-[40px] px-3.5 py-2 rounded-lg bg-[#14243A] hover:bg-[#0D1828] dark:bg-[#4263EB] dark:hover:bg-[#3451C7] text-white text-xs sm:text-sm font-medium inline-flex items-center gap-2 transition-colors"
               >
-                <Maximize2 className="w-4 h-4" />
+                <Maximize2 className="w-4 h-4 shrink-0" />
                 <span>Full-Screen Display</span>
               </button>
 
@@ -248,13 +248,13 @@ export function LiveSessionPanel({
                 type="button"
                 disabled={actionBusy}
                 onClick={handleToggleCheckpoint}
-                className={`min-h-[40px] px-3.5 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2 border transition-colors whitespace-nowrap ${
+                className={`min-h-[40px] px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium inline-flex items-center gap-2 border transition-colors text-left ${
                   session.checkpointActive
                     ? 'bg-[#0F9D91] text-white border-[#0F9D91]'
                     : 'bg-white dark:bg-[#14243A] text-[#172337] dark:text-slate-100 border-[#E5EAF0] dark:border-slate-700 hover:bg-[#F6F8FB] dark:hover:bg-slate-800'
                 }`}
               >
-                <ShieldCheck className="w-4 h-4" />
+                <ShieldCheck className="w-4 h-4 shrink-0" />
                 <span>{session.checkpointActive ? 'Stop 2nd Checkpoint' : 'Verify Attendance (2nd Checkpoint)'}</span>
               </button>
 
@@ -262,9 +262,9 @@ export function LiveSessionPanel({
                 type="button"
                 disabled={actionBusy}
                 onClick={handleCloseSession}
-                className="min-h-[40px] px-3.5 py-2 rounded-lg bg-[#D84A4A] hover:bg-[#BE3B3B] text-white text-sm font-medium inline-flex items-center gap-2 transition-colors whitespace-nowrap"
+                className="min-h-[40px] px-3.5 py-2 rounded-lg bg-[#D84A4A] hover:bg-[#BE3B3B] text-white text-xs sm:text-sm font-medium inline-flex items-center gap-2 transition-colors"
               >
-                <StopCircle className="w-4 h-4" />
+                <StopCircle className="w-4 h-4 shrink-0" />
                 <span>End Session</span>
               </button>
             </>
@@ -350,7 +350,7 @@ export function LiveSessionPanel({
 
         {/* Live QR Card */}
         {isLive && payload && (
-          <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-5 flex items-center gap-5">
+          <div className="bg-white dark:bg-[#0F1A2B] border border-[#E5EAF0] dark:border-slate-800 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
             <div className="shrink-0 bg-white border border-[#E5EAF0] rounded-lg p-2">
               {qrDataUrl ? (
                 <img src={qrDataUrl} alt="Live attendance QR" className="w-28 h-28 object-contain" />
@@ -403,8 +403,8 @@ export function LiveSessionPanel({
             <p className="text-xs text-[#697586] dark:text-slate-400 tabular-nums">{total} matching students</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="relative">
+          <div className="w-full md:w-auto flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
+            <div className="relative w-full sm:w-56">
               <Search className="w-4 h-4 text-[#697586] dark:text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="search"
@@ -414,7 +414,7 @@ export function LiveSessionPanel({
                   setPage(1);
                 }}
                 placeholder="Search name or matric..."
-                className="min-h-[38px] pl-9 pr-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#09111E] text-[#172337] dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#4263EB] w-56"
+                className="min-h-[38px] pl-9 pr-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#09111E] text-[#172337] dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#4263EB] w-full"
               />
             </div>
 
@@ -425,7 +425,7 @@ export function LiveSessionPanel({
                 setPage(1);
               }}
               aria-label="Filter by status"
-              className="min-h-[38px] px-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#09111E] text-[#172337] dark:text-slate-100"
+              className="min-h-[38px] px-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#09111E] text-[#172337] dark:text-slate-100 w-full sm:w-auto"
             >
               <option value="">All statuses</option>
               <option value="present">Present</option>
@@ -445,7 +445,7 @@ export function LiveSessionPanel({
                 setPage(1);
               }}
               aria-label="Filter by second checkpoint"
-              className="min-h-[38px] px-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#09111E] text-[#172337] dark:text-slate-100"
+              className="min-h-[38px] px-3 py-1.5 text-sm border border-[#E5EAF0] dark:border-slate-700 rounded-lg bg-white dark:bg-[#09111E] text-[#172337] dark:text-slate-100 w-full sm:w-auto"
             >
               <option value="">All checkpoints</option>
               <option value="completed">2nd Check Verified</option>
@@ -578,9 +578,9 @@ export function LiveSessionPanel({
           </div>
           <div className="divide-y divide-[#E5EAF0] dark:divide-slate-800 text-xs">
             {failedAttempts.slice(0, 8).map((f) => (
-              <div key={f.id} className="py-2.5 flex flex-wrap items-center justify-between gap-2">
-                <span className="text-[#172337] dark:text-slate-200">{f.reason}</span>
-                <span className="font-mono-tabular text-[#697586] dark:text-slate-400">
+              <div key={f.id} className="py-2.5 flex flex-wrap items-center justify-between gap-2 min-w-0">
+                <span className="text-[#172337] dark:text-slate-200 min-w-0 break-words">{f.reason}</span>
+                <span className="font-mono-tabular text-[#697586] dark:text-slate-400 break-all">
                   {f.code} · {new Date(f.attemptedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
